@@ -6,7 +6,6 @@
 </head>
 <body>
 
-<!-- LOGIN PAGE -->
 <div class="container" id="loginPage">
     <h2>Online Examination System</h2>
     <input type="text" id="username" placeholder="Enter Username">
@@ -14,21 +13,18 @@
     <button onclick="login()">Login</button>
 </div>
 
-<!-- DASHBOARD -->
 <div class="container hidden" id="dashboard">
     <h2>Welcome to Dashboard</h2>
     <button onclick="startExam()">Start Exam</button>
     <button onclick="logout()">Logout</button>
 </div>
 
-<!-- EXAM PAGE -->
 <div class="container hidden" id="examPage">
     <h3 id="question"></h3>
     <div id="options"></div>
     <button onclick="nextQuestion()">Next</button>
 </div>
 
-<!-- RESULT PAGE -->
 <div class="container hidden" id="resultPage">
     <h2>Exam Completed</h2>
     <h3 id="score"></h3>
@@ -37,4 +33,5 @@
 
 <script src="script.js"></script>
 </body>
+
 </html>
