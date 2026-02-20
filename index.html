@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Online Exam System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- LOGIN PAGE -->
+<div class="container" id="loginPage">
+    <h2>Online Examination System</h2>
+    <input type="text" id="username" placeholder="Enter Username">
+    <input type="password" id="password" placeholder="Enter Password">
+    <button onclick="login()">Login</button>
+</div>
+
+<!-- DASHBOARD -->
+<div class="container hidden" id="dashboard">
+    <h2>Welcome to Dashboard</h2>
+    <button onclick="startExam()">Start Exam</button>
+    <button onclick="logout()">Logout</button>
+</div>
+
+<!-- EXAM PAGE -->
+<div class="container hidden" id="examPage">
+    <h3 id="question"></h3>
+    <div id="options"></div>
+    <button onclick="nextQuestion()">Next</button>
+</div>
+
+<!-- RESULT PAGE -->
+<div class="container hidden" id="resultPage">
+    <h2>Exam Completed</h2>
+    <h3 id="score"></h3>
+    <button onclick="logout()">Go to Login</button>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
