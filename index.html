@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ExamPortal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div id="app" style="min-height:600px;padding:0"></div>
+
+  <!-- React UMD -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+
+  <!-- App modules (order matters) -->
+  <script src="js/storage.js"></script>
+  <script src="js/AuthContext.js"></script>
+  <script src="js/components/Navbar.js"></script>
+  <script src="js/components/LoginPage.js"></script>
+  <script src="js/components/StudentDashboard.js"></script>
+  <script src="js/components/ResultView.js"></script>
+  <script src="js/components/ExamRoom.js"></script>
+  <script src="js/components/AdminDashboard.js"></script>
+  <script src="js/App.js"></script>
+</body>
+</html>
