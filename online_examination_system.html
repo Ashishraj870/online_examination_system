@@ -1,0 +1,530 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=DM+Sans:wght@400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f172a;--surface:#1e293b;--surface2:#2d3f55;--border:#334155;
+  --text:#f1f5f9;--muted:#94a3b8;--accent:#f59e0b;--accent2:#3b82f6;
+  --green:#22c55e;--red:#ef4444;--radius:10px;
+  font-family:'DM Sans',sans-serif;
+}
+body{background:var(--bg);color:var(--text);min-height:100vh}
+h1,h2,h3,h4{font-family:'Sora',sans-serif}
+.btn{padding:9px 20px;border-radius:var(--radius);border:none;cursor:pointer;font-size:14px;font-weight:500;transition:.15s;font-family:'DM Sans',sans-serif}
+.btn-primary{background:var(--accent);color:#1a1400}
+.btn-primary:hover{background:#fbbf24}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+.btn-secondary:hover{background:#3d526b}
+.btn-danger{background:#7f1d1d;color:#fca5a5;border:1px solid #ef444440}
+.btn-danger:hover{background:#991b1b}
+.btn-success{background:#14532d;color:#86efac;border:1px solid #22c55e40}
+.btn-success:hover{background:#166534}
+.btn-sm{padding:5px 12px;font-size:13px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.5rem}
+.input{width:100%;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:.15s}
+.input:focus{border-color:var(--accent)}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:500}
+.badge-green{background:#14532d;color:#86efac}
+.badge-blue{background:#1e3a5f;color:#93c5fd}
+.badge-amber{background:#451a03;color:#fcd34d}
+.badge-red{background:#7f1d1d;color:#fca5a5}
+.tag{font-size:11px;padding:2px 8px;border-radius:20px;background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
+</style>
+
+<div id="app" style="min-height:600px;padding:0"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script>
+const {useState,useEffect,useCallback,useRef,createContext,useContext}=React;
+const h=React.createElement;
+
+// ─── Storage helpers ────────────────────────────────────────────────────────
+const LS={
+  get:(k)=>{try{return JSON.parse(localStorage.getItem(k))||null}catch{return null}},
+  set:(k,v)=>localStorage.setItem(k,JSON.stringify(v))
+};
+
+// ─── Seed default data ───────────────────────────────────────────────────────
+function seedData(){
+  if(LS.get('oex_seeded'))return;
+  LS.set('oex_users',[
+    {id:'u1',name:'Admin User',email:'admin@exam.com',password:'admin123',role:'admin'},
+    {id:'u2',name:'Ashish Kumar',email:'student@exam.com',password:'test123',role:'student'}
+  ]);
+  LS.set('oex_exams',[
+    {id:'e1',title:'JavaScript Fundamentals',subject:'Web Dev',duration:10,questions:[
+      {id:'q1',text:'Which keyword declares a block-scoped variable?',opts:['var','let','const','function'],correct:1},
+      {id:'q2',text:'What does typeof null return?',opts:['null','undefined','object','string'],correct:2},
+      {id:'q3',text:'Which method adds an element to the end of an array?',opts:['push()','pop()','shift()','unshift()'],correct:0},
+      {id:'q4',text:'What is the output of 0.1 + 0.2 === 0.3 in JS?',opts:['true','false','NaN','undefined'],correct:1},
+      {id:'q5',text:'Which of these is NOT a JavaScript data type?',opts:['string','float','boolean','symbol'],correct:1}
+    ],createdAt:Date.now()-86400000*3},
+    {id:'e2',title:'Data Structures & Algorithms',subject:'CS Core',duration:15,questions:[
+      {id:'q6',text:'What is the time complexity of binary search?',opts:['O(n)','O(n²)','O(log n)','O(1)'],correct:2},
+      {id:'q7',text:'Which data structure uses LIFO order?',opts:['Queue','Stack','Heap','Tree'],correct:1},
+      {id:'q8',text:'Which sorting algorithm has worst-case O(n log n)?',opts:['Bubble Sort','Quick Sort','Merge Sort','Selection Sort'],correct:2},
+      {id:'q9',text:'In a linked list, accessing an element by index is:',opts:['O(1)','O(log n)','O(n)','O(n²)'],correct:2},
+      {id:'q10',text:'Which tree is balanced by definition?',opts:['BST','AVL Tree','Trie','Segment Tree'],correct:1}
+    ],createdAt:Date.now()-86400000*2},
+    {id:'e3',title:'Java OOP Concepts',subject:'Java',duration:12,questions:[
+      {id:'q11',text:'Which pillar of OOP restricts direct access to object data?',opts:['Inheritance','Polymorphism','Encapsulation','Abstraction'],correct:2},
+      {id:'q12',text:'What keyword prevents a class from being subclassed in Java?',opts:['static','final','abstract','sealed'],correct:1},
+      {id:'q13',text:'Which of these is used to achieve runtime polymorphism?',opts:['Method overloading','Constructor overloading','Method overriding','Static binding'],correct:2},
+      {id:'q14',text:'An interface in Java can have:',opts:['Only abstract methods','Only default methods','Both abstract and default methods','Constructors'],correct:2},
+      {id:'q15',text:'Which access modifier makes a member accessible only within its class?',opts:['public','protected','default','private'],correct:3}
+    ],createdAt:Date.now()-86400000}
+  ]);
+  LS.set('oex_results',[
+    {id:'r1',userId:'u2',examId:'e1',score:4,total:5,pct:80,answers:{q1:1,q2:2,q3:0,q4:0,q5:1},timeTaken:420,submittedAt:Date.now()-3600000}
+  ]);
+  LS.set('oex_seeded',true);
+}
+seedData();
+
+// ─── Auth Context ────────────────────────────────────────────────────────────
+const AuthCtx=createContext(null);
+function useAuth(){return useContext(AuthCtx);}
+
+// ─── Navbar ──────────────────────────────────────────────────────────────────
+function Navbar({page,setPage}){
+  const {user,logout}=useAuth();
+  const role=user?.role;
+  return h('nav',{style:{background:LS.get('oex_surface')||'#1e293b',borderBottom:'1px solid #334155',padding:'0 1.5rem',display:'flex',alignItems:'center',justifyContent:'space-between',height:'56px',background:'#162032'}},
+    h('div',{style:{display:'flex',alignItems:'center',gap:'10px'}},
+      h('div',{style:{width:'28px',height:'28px',background:'#f59e0b',borderRadius:'7px',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'14px',fontWeight:700,fontFamily:'Sora',color:'#1a1400'}},'E'),
+      h('span',{style:{fontFamily:'Sora',fontWeight:600,fontSize:'15px',color:'#f1f5f9'}},'ExamPortal')
+    ),
+    h('div',{style:{display:'flex',alignItems:'center',gap:'8px'}},
+      role==='admin'?[
+        h('button',{key:'dash',className:'btn btn-sm btn-secondary',onClick:()=>setPage('admin')},'Dashboard'),
+        h('button',{key:'res',className:'btn btn-sm btn-secondary',onClick:()=>setPage('results')},'Results')
+      ]:role==='student'?[
+        h('button',{key:'dash',className:'btn btn-sm btn-secondary',onClick:()=>setPage('student')},'Dashboard')
+      ]:null,
+      user?h('div',{style:{display:'flex',alignItems:'center',gap:'10px'}},
+        h('span',{style:{fontSize:'13px',color:'#94a3b8'}},'Hi, '+user.name.split(' ')[0]),
+        h('button',{className:'btn btn-sm btn-secondary',onClick:logout},'Logout')
+      ):null
+    )
+  );
+}
+
+// ─── Login Page ───────────────────────────────────────────────────────────────
+function LoginPage({setPage}){
+  const {login}=useAuth();
+  const [form,setForm]=useState({email:'',password:''});
+  const [err,setErr]=useState('');
+  const [mode,setMode]=useState('login');
+  const [regForm,setRegForm]=useState({name:'',email:'',password:'',role:'student'});
+  const [regErr,setRegErr]=useState('');
+
+  function doLogin(e){
+    e&&e.preventDefault();
+    const users=LS.get('oex_users')||[];
+    const u=users.find(x=>x.email===form.email&&x.password===form.password);
+    if(!u)return setErr('Invalid email or password');
+    login(u);
+  }
+  function doRegister(e){
+    e&&e.preventDefault();
+    if(!regForm.name||!regForm.email||!regForm.password)return setRegErr('All fields required');
+    const users=LS.get('oex_users')||[];
+    if(users.find(x=>x.email===regForm.email))return setRegErr('Email already registered');
+    const nu={id:'u'+Date.now(),name:regForm.name,email:regForm.email,password:regForm.password,role:regForm.role};
+    LS.set('oex_users',[...users,nu]);
+    login(nu);
+  }
+
+  return h('div',{style:{display:'flex',justifyContent:'center',alignItems:'center',minHeight:'520px',padding:'2rem 1rem',background:'linear-gradient(135deg,#0f172a 0%,#162032 100%)'}},
+    h('div',{style:{width:'100%',maxWidth:'400px'}},
+      h('div',{style:{textAlign:'center',marginBottom:'2rem'}},
+        h('div',{style:{width:'48px',height:'48px',background:'#f59e0b',borderRadius:'12px',margin:'0 auto 1rem',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'22px',fontWeight:700,fontFamily:'Sora',color:'#1a1400'}},'E'),
+        h('h1',{style:{fontFamily:'Sora',fontSize:'22px',marginBottom:'6px'}},'ExamPortal'),
+        h('p',{style:{color:'#94a3b8',fontSize:'14px'}},'Smart Academic Examination System')
+      ),
+      h('div',{className:'card'},
+        h('div',{style:{display:'flex',background:'#162032',borderRadius:'8px',padding:'3px',marginBottom:'1.25rem'}},
+          ['login','register'].map(m=>h('button',{key:m,onClick:()=>setMode(m),style:{flex:1,padding:'7px',border:'none',borderRadius:'6px',cursor:'pointer',fontSize:'13px',fontWeight:500,fontFamily:'DM Sans',transition:'.15s',background:mode===m?'#f59e0b':' transparent',color:mode===m?'#1a1400':'#94a3b8'}},m==='login'?'Login':'Register'))
+        ),
+        mode==='login'?h('div',null,
+          h('div',{style:{marginBottom:'1rem'}},
+            h('label',{style:{fontSize:'13px',color:'#94a3b8',display:'block',marginBottom:'5px'}},'Email'),
+            h('input',{className:'input',type:'email',value:form.email,onChange:e=>setForm({...form,email:e.target.value}),placeholder:'admin@exam.com or student@exam.com'})
+          ),
+          h('div',{style:{marginBottom:'1rem'}},
+            h('label',{style:{fontSize:'13px',color:'#94a3b8',display:'block',marginBottom:'5px'}},'Password'),
+            h('input',{className:'input',type:'password',value:form.password,onChange:e=>setForm({...form,password:e.target.value}),onKeyDown:e=>e.key==='Enter'&&doLogin(),placeholder:'Enter password'})
+          ),
+          err&&h('p',{style:{color:'#f87171',fontSize:'13px',marginBottom:'1rem'}},err),
+          h('button',{className:'btn btn-primary',style:{width:'100%'},onClick:doLogin},'Login'),
+          h('div',{style:{marginTop:'1rem',padding:'10px',background:'#162032',borderRadius:'8px',fontSize:'12px',color:'#64748b'}},
+            h('strong',{style:{color:'#94a3b8'}},'Demo credentials:'),
+            h('br'),
+            'Admin: admin@exam.com / admin123',h('br'),'Student: student@exam.com / test123'
+          )
+        ):h('div',null,
+          ['name','email','password'].map(field=>
+            h('div',{key:field,style:{marginBottom:'1rem'}},
+              h('label',{style:{fontSize:'13px',color:'#94a3b8',display:'block',marginBottom:'5px'}},field.charAt(0).toUpperCase()+field.slice(1)),
+              h('input',{className:'input',type:field==='password'?'password':field==='email'?'email':'text',value:regForm[field],onChange:e=>setRegForm({...regForm,[field]:e.target.value}),placeholder:field==='name'?'Your full name':field==='email'?'your@email.com':'Min 6 characters'})
+            )
+          ),
+          h('div',{style:{marginBottom:'1rem'}},
+            h('label',{style:{fontSize:'13px',color:'#94a3b8',display:'block',marginBottom:'5px'}},'Role'),
+            h('select',{className:'input',value:regForm.role,onChange:e=>setRegForm({...regForm,role:e.target.value})},
+              h('option',{value:'student'},'Student'),
+              h('option',{value:'admin'},'Admin')
+            )
+          ),
+          regErr&&h('p',{style:{color:'#f87171',fontSize:'13px',marginBottom:'1rem'}},regErr),
+          h('button',{className:'btn btn-primary',style:{width:'100%'},onClick:doRegister},'Create Account')
+        )
+      )
+    )
+  );
+}
+
+// ─── Student Dashboard ────────────────────────────────────────────────────────
+function StudentDashboard({setPage,setActiveExam}){
+  const {user}=useAuth();
+  const exams=LS.get('oex_exams')||[];
+  const results=LS.get('oex_results')||[];
+  const myResults=results.filter(r=>r.userId===user.id);
+  const attempted=new Set(myResults.map(r=>r.examId));
+
+  return h('div',{style:{padding:'1.5rem',maxWidth:'900px',margin:'0 auto'}},
+    h('div',{style:{marginBottom:'1.5rem'}},
+      h('h2',{style:{fontFamily:'Sora',fontSize:'20px',marginBottom:'4px'}},'Welcome back, '+user.name.split(' ')[0]+' 👋'),
+      h('p',{style:{color:'#94a3b8',fontSize:'14px'}},'Your exam dashboard — attempt available exams and track your performance.')
+    ),
+    h('div',{style:{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'12px',marginBottom:'1.75rem'}},
+      [{label:'Available Exams',val:exams.length,color:'#3b82f6'},{label:'Completed',val:attempted.size,color:'#22c55e'},{label:'Avg Score',val:myResults.length?Math.round(myResults.reduce((a,r)=>a+r.pct,0)/myResults.length)+'%':'—',color:'#f59e0b'}].map(s=>
+        h('div',{key:s.label,style:{background:'#1e293b',border:'1px solid #334155',borderRadius:'12px',padding:'1rem'}},
+          h('div',{style:{fontSize:'22px',fontWeight:600,fontFamily:'Sora',color:s.color}},(s.val)),
+          h('div',{style:{fontSize:'13px',color:'#94a3b8',marginTop:'3px'}},(s.label))
+        )
+      )
+    ),
+    h('h3',{style:{fontFamily:'Sora',fontSize:'15px',marginBottom:'1rem',color:'#cbd5e1'}},'Available Exams'),
+    exams.length===0?h('p',{style:{color:'#64748b'}},'No exams available yet.'):
+    h('div',{style:{display:'grid',gap:'12px'}},
+      exams.map(ex=>{
+        const done=attempted.has(ex.id);
+        const res=myResults.find(r=>r.examId===ex.id);
+        return h('div',{key:ex.id,className:'card',style:{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:'1rem'}},
+          h('div',null,
+            h('div',{style:{display:'flex',alignItems:'center',gap:'8px',marginBottom:'5px'}},
+              h('span',{style:{fontFamily:'Sora',fontWeight:600,fontSize:'15px'}},(ex.title)),
+              h('span',{className:'badge badge-blue'},(ex.subject))
+            ),
+            h('div',{style:{display:'flex',gap:'12px',fontSize:'13px',color:'#94a3b8'}},
+              h('span',null,'⏱ '+ex.duration+' min'),
+              h('span',null,'❓ '+ex.questions.length+' questions'),
+              done&&res&&h('span',{style:{color:res.pct>=60?'#22c55e':'#ef4444'}},'Score: '+res.pct+'%')
+            )
+          ),
+          done?h('button',{className:'btn btn-secondary btn-sm'},'✓ Completed'):
+          h('button',{className:'btn btn-primary btn-sm',onClick:()=>{setActiveExam(ex);setPage('exam')}},'Start Exam →')
+        );
+      })
+    )
+  );
+}
+
+// ─── Exam Room ────────────────────────────────────────────────────────────────
+function ExamRoom({exam,setPage}){
+  const {user}=useAuth();
+  const [shuffled]=useState(()=>[...exam.questions].sort(()=>Math.random()-0.5));
+  const [current,setCurrent]=useState(0);
+  const [answers,setAnswers]=useState({});
+  const [timeLeft,setTimeLeft]=useState(exam.duration*60);
+  const [submitted,setSubmitted]=useState(false);
+  const [result,setResult]=useState(null);
+  const [warning,setWarning]=useState(false);
+  const startTime=useRef(Date.now());
+
+  useEffect(()=>{
+    if(submitted)return;
+    const tid=setInterval(()=>setTimeLeft(t=>{if(t<=1){clearInterval(tid);submitExam(true);return 0;}return t-1;}),1000);
+    return()=>clearInterval(tid);
+  },[submitted]);
+
+  useEffect(()=>{
+    if(submitted)return;
+    function onVis(){if(document.hidden)setWarning(true);}
+    document.addEventListener('visibilitychange',onVis);
+    return()=>document.removeEventListener('visibilitychange',onVis);
+  },[submitted]);
+
+  function submitExam(auto=false){
+    if(submitted)return;
+    const timeTaken=Math.floor((Date.now()-startTime.current)/1000);
+    let score=0;
+    shuffled.forEach(q=>{if(answers[q.id]===q.correct)score++;});
+    const pct=Math.round((score/shuffled.length)*100);
+    const res={id:'r'+Date.now(),userId:user.id,examId:exam.id,score,total:shuffled.length,pct,answers,timeTaken,submittedAt:Date.now()};
+    const prev=LS.get('oex_results')||[];
+    const filtered=prev.filter(r=>!(r.userId===user.id&&r.examId===exam.id));
+    LS.set('oex_results',[...filtered,res]);
+    setResult({...res,shuffled,auto});
+    setSubmitted(true);
+  }
+
+  const q=shuffled[current];
+  const fmt=s=>`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+
+  if(submitted&&result)return h(ResultView,{result,exam,setPage});
+
+  return h('div',{style:{padding:'1.5rem',maxWidth:'760px',margin:'0 auto'}},
+    warning&&h('div',{style:{background:'#7f1d1d',border:'1px solid #ef4444',borderRadius:'10px',padding:'12px 16px',marginBottom:'1rem',display:'flex',justifyContent:'space-between',alignItems:'center'}},
+      h('span',{style:{color:'#fca5a5',fontSize:'14px'}},'⚠ Tab switch detected! This incident has been noted.'),
+      h('button',{style:{background:'none',border:'none',color:'#fca5a5',cursor:'pointer'},onClick:()=>setWarning(false)},'×')
+    ),
+    h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1.25rem',flexWrap:'wrap',gap:'8px'}},
+      h('div',null,
+        h('h2',{style:{fontFamily:'Sora',fontSize:'17px'}},(exam.title)),
+        h('p',{style:{fontSize:'13px',color:'#94a3b8'}},'Question '+(current+1)+' of '+shuffled.length)
+      ),
+      h('div',{style:{display:'flex',alignItems:'center',gap:'8px',background:timeLeft<60?'#7f1d1d':'#1e293b',border:'1px solid '+(timeLeft<60?'#ef4444':'#334155'),borderRadius:'10px',padding:'8px 14px'}},
+        h('span',{style:{fontSize:'18px',fontFamily:'Sora',fontWeight:600,color:timeLeft<60?'#f87171':'#f59e0b',letterSpacing:'2px'}},fmt(timeLeft))
+      )
+    ),
+    h('div',{style:{background:'#1e293b',border:'1px solid #334155',borderRadius:'14px',padding:'1.5rem',marginBottom:'1.25rem'}},
+      h('p',{style:{fontSize:'15px',lineHeight:1.7,marginBottom:'1.25rem',fontWeight:500}},(q.text)),
+      h('div',{style:{display:'grid',gap:'8px'}},
+        q.opts.map((opt,i)=>{
+          const sel=answers[q.id]===i;
+          return h('button',{key:i,onClick:()=>setAnswers({...answers,[q.id]:i}),style:{textAlign:'left',padding:'11px 15px',borderRadius:'8px',border:'1px solid '+(sel?'#f59e0b':'#334155'),background:sel?'#451a03':'#162032',color:sel?'#fcd34d':'#e2e8f0',cursor:'pointer',fontSize:'14px',transition:'.15s'}},
+            h('span',{style:{display:'inline-block',width:'22px',height:'22px',borderRadius:'50%',background:sel?'#f59e0b':'#2d3f55',color:sel?'#1a1400':'#94a3b8',fontSize:'11px',fontWeight:600,textAlign:'center',lineHeight:'22px',marginRight:'10px'}},['A','B','C','D'][i]),
+            opt
+          );
+        })
+      )
+    ),
+    h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:'8px'}},
+      h('div',{style:{display:'flex',gap:'6px',flexWrap:'wrap'}},
+        shuffled.map((_,i)=>h('button',{key:i,onClick:()=>setCurrent(i),style:{width:'30px',height:'30px',borderRadius:'6px',border:'1px solid '+(current===i?'#f59e0b':answers[shuffled[i].id]!==undefined?'#22c55e40':'#334155'),background:current===i?'#451a03':answers[shuffled[i].id]!==undefined?'#14532d':'#1e293b',color:current===i?'#fcd34d':answers[shuffled[i].id]!==undefined?'#86efac':'#64748b',cursor:'pointer',fontSize:'12px',fontWeight:600}},(i+1)))
+      ),
+      h('div',{style:{display:'flex',gap:'8px'}},
+        current>0&&h('button',{className:'btn btn-secondary btn-sm',onClick:()=>setCurrent(c=>c-1)},'← Prev'),
+        current<shuffled.length-1?h('button',{className:'btn btn-primary btn-sm',onClick:()=>setCurrent(c=>c+1)},'Next →'):
+        h('button',{className:'btn btn-success btn-sm',onClick:()=>submitExam()},'Submit Exam ✓')
+      )
+    )
+  );
+}
+
+// ─── Result View ──────────────────────────────────────────────────────────────
+function ResultView({result,exam,setPage}){
+  const {score,total,pct,answers,shuffled,auto}=result;
+  const passed=pct>=60;
+  return h('div',{style:{padding:'1.5rem',maxWidth:'760px',margin:'0 auto'}},
+    h('div',{className:'card',style:{textAlign:'center',marginBottom:'1.5rem',padding:'2rem'}},
+      auto&&h('p',{style:{color:'#fbbf24',fontSize:'13px',marginBottom:'8px'}},'⏱ Auto-submitted when timer ended'),
+      h('div',{style:{fontSize:'56px',fontFamily:'Sora',fontWeight:700,color:passed?'#22c55e':'#ef4444'}},(pct)+'%'),
+      h('div',{style:{fontSize:'16px',color:'#94a3b8',marginTop:'4px'}},(score)+' / '+(total)+' correct'),
+      h('div',{className:'badge '+(passed?'badge-green':'badge-red'),style:{fontSize:'14px',padding:'5px 16px',marginTop:'10px'}},(passed?'PASSED ✓':'FAILED ✗')),
+      h('p',{style:{color:'#64748b',fontSize:'13px',marginTop:'8px'}},'Time taken: '+Math.floor(result.timeTaken/60)+'m '+(result.timeTaken%60)+'s')
+    ),
+    h('h3',{style:{fontFamily:'Sora',fontSize:'15px',marginBottom:'1rem',color:'#cbd5e1'}},'Answer Review'),
+    h('div',{style:{display:'grid',gap:'10px',marginBottom:'1.5rem'}},
+      (shuffled||exam.questions).map((q,i)=>{
+        const userAns=answers[q.id];
+        const correct=userAns===q.correct;
+        return h('div',{key:q.id,style:{background:'#1e293b',border:'1px solid '+(correct?'#22c55e40':userAns===undefined?'#334155':'#ef444440'),borderRadius:'10px',padding:'1rem'}},
+          h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:'8px',marginBottom:'8px'}},
+            h('p',{style:{fontSize:'14px',fontWeight:500}},(i+1)+'. '+(q.text)),
+            h('span',{style:{fontSize:'18px',flexShrink:0}},correct?'✓':userAns===undefined?'—':'✗')
+          ),
+          h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'5px'}},
+            q.opts.map((opt,j)=>h('div',{key:j,style:{padding:'6px 10px',borderRadius:'6px',fontSize:'13px',border:'1px solid transparent',background:j===q.correct?'#14532d':userAns===j&&!correct?'#7f1d1d':'#162032',color:j===q.correct?'#86efac':userAns===j&&!correct?'#fca5a5':'#94a3b8'}},
+              ['A','B','C','D'][j]+'. '+opt
+            ))
+          )
+        );
+      })
+    ),
+    h('button',{className:'btn btn-primary',onClick:()=>setPage('student')},'← Back to Dashboard')
+  );
+}
+
+// ─── Admin Dashboard ───────────────────────────────────────────────────────────
+function AdminDashboard(){
+  const [tab,setTab]=useState('exams');
+  const [exams,setExams]=useState(LS.get('oex_exams')||[]);
+  const [editing,setEditing]=useState(null);
+  const [showForm,setShowForm]=useState(false);
+
+  function refresh(){setExams(LS.get('oex_exams')||[]);}
+
+  function deleteExam(id){
+    const upd=exams.filter(e=>e.id!==id);
+    LS.set('oex_exams',upd);setExams(upd);
+  }
+
+  return h('div',{style:{padding:'1.5rem',maxWidth:'960px',margin:'0 auto'}},
+    h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1.5rem',flexWrap:'wrap',gap:'8px'}},
+      h('h2',{style:{fontFamily:'Sora',fontSize:'20px'}},'Admin Dashboard'),
+      h('div',{style:{display:'flex',gap:'8px'}},
+        ['exams','results'].map(t=>h('button',{key:t,className:'btn btn-sm '+(tab===t?'btn-primary':'btn-secondary'),onClick:()=>setTab(t)},t.charAt(0).toUpperCase()+t.slice(1)))
+      )
+    ),
+    tab==='exams'?h(AdminExams,{exams,setExams,deleteExam,editing,setEditing,showForm,setShowForm,refresh}):
+    h(AdminResults,{exams})
+  );
+}
+
+function AdminExams({exams,setExams,deleteExam,editing,setEditing,showForm,setShowForm,refresh}){
+  return h('div',null,
+    h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1rem'}},
+      h('span',{style:{color:'#94a3b8',fontSize:'14px'}},(exams.length)+' exams total'),
+      h('button',{className:'btn btn-primary btn-sm',onClick:()=>{setEditing(null);setShowForm(true);}},'+  New Exam')
+    ),
+    showForm&&h(ExamForm,{exam:editing,onSave:(ex)=>{
+      const all=LS.get('oex_exams')||[];
+      if(editing){LS.set('oex_exams',all.map(e=>e.id===ex.id?ex:e));}
+      else{LS.set('oex_exams',[...all,ex]);}
+      refresh();setShowForm(false);setEditing(null);
+    },onCancel:()=>{setShowForm(false);setEditing(null);}}),
+    h('div',{style:{display:'grid',gap:'10px'}},
+      exams.map(ex=>{
+        const results=(LS.get('oex_results')||[]).filter(r=>r.examId===ex.id);
+        return h('div',{key:ex.id,className:'card',style:{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:'1rem'}},
+          h('div',null,
+            h('div',{style:{display:'flex',alignItems:'center',gap:'8px',marginBottom:'4px'}},
+              h('span',{style:{fontFamily:'Sora',fontWeight:600,fontSize:'15px'}},(ex.title)),
+              h('span',{className:'badge badge-blue'},(ex.subject))
+            ),
+            h('div',{style:{fontSize:'13px',color:'#94a3b8',display:'flex',gap:'12px'}},
+              h('span',null,'⏱ '+ex.duration+' min'),
+              h('span',null,'❓ '+ex.questions.length+' Qs'),
+              h('span',null,'📊 '+results.length+' attempts')
+            )
+          ),
+          h('div',{style:{display:'flex',gap:'7px'}},
+            h('button',{className:'btn btn-secondary btn-sm',onClick:()=>{setEditing(ex);setShowForm(true)}},'Edit'),
+            h('button',{className:'btn btn-danger btn-sm',onClick:()=>deleteExam(ex.id)},'Delete')
+          )
+        );
+      })
+    )
+  );
+}
+
+function ExamForm({exam,onSave,onCancel}){
+  const [form,setForm]=useState(exam||{id:'e'+Date.now(),title:'',subject:'',duration:15,questions:[]});
+  const [newQ,setNewQ]=useState({text:'',opts:['','','',''],correct:0});
+  const [err,setErr]=useState('');
+
+  function addQ(){
+    if(!newQ.text||newQ.opts.some(o=>!o))return setErr('Fill all question fields');
+    setErr('');
+    setForm({...form,questions:[...form.questions,{id:'q'+Date.now(),...newQ}]});
+    setNewQ({text:'',opts:['','','',''],correct:0});
+  }
+  function removeQ(id){setForm({...form,questions:form.questions.filter(q=>q.id!==id)});}
+  function save(){
+    if(!form.title||!form.subject||!form.duration)return setErr('Title, subject, and duration required');
+    if(form.questions.length<1)return setErr('Add at least 1 question');
+    setErr('');onSave({...form,createdAt:form.createdAt||Date.now()});
+  }
+
+  return h('div',{style:{background:'#162032',border:'1px solid #334155',borderRadius:'14px',padding:'1.5rem',marginBottom:'1.5rem'}},
+    h('h3',{style:{fontFamily:'Sora',fontSize:'16px',marginBottom:'1.25rem'}},(exam?'Edit':'Create')+' Exam'),
+    h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr 100px',gap:'12px',marginBottom:'1.25rem'}},
+      h('div',null,h('label',{style:{fontSize:'12px',color:'#94a3b8',display:'block',marginBottom:'4px'}},'Title'),h('input',{className:'input',value:form.title,onChange:e=>setForm({...form,title:e.target.value}),placeholder:'e.g. Java Basics'})),
+      h('div',null,h('label',{style:{fontSize:'12px',color:'#94a3b8',display:'block',marginBottom:'4px'}},'Subject'),h('input',{className:'input',value:form.subject,onChange:e=>setForm({...form,subject:e.target.value}),placeholder:'e.g. CS Core'})),
+      h('div',null,h('label',{style:{fontSize:'12px',color:'#94a3b8',display:'block',marginBottom:'4px'}},'Duration (min)'),h('input',{className:'input',type:'number',value:form.duration,onChange:e=>setForm({...form,duration:parseInt(e.target.value)||15})}))
+    ),
+    h('div',{style:{marginBottom:'1.25rem'}},
+      h('h4',{style:{fontSize:'13px',color:'#94a3b8',marginBottom:'8px'}},'Questions ('+form.questions.length+')'),
+      form.questions.length===0?h('p',{style:{color:'#64748b',fontSize:'13px'}},'No questions yet. Add below.'):
+      h('div',{style:{display:'grid',gap:'7px',marginBottom:'10px'}},
+        form.questions.map((q,i)=>h('div',{key:q.id,style:{background:'#1e293b',borderRadius:'8px',padding:'10px 14px',display:'flex',justifyContent:'space-between',alignItems:'center',gap:'8px'}},
+          h('span',{style:{fontSize:'13px'}},(i+1)+'. '+(q.text.substring(0,60))+(q.text.length>60?'...':'')),
+          h('button',{style:{background:'none',border:'none',color:'#ef4444',cursor:'pointer',fontSize:'16px'},onClick:()=>removeQ(q.id)},'×')
+        ))
+      ),
+      h('div',{style:{background:'#1e293b',borderRadius:'10px',padding:'1rem'}},
+        h('label',{style:{fontSize:'12px',color:'#94a3b8',display:'block',marginBottom:'5px'}},'Question text'),
+        h('input',{className:'input',value:newQ.text,onChange:e=>setNewQ({...newQ,text:e.target.value}),placeholder:'Enter question...',style:{marginBottom:'10px'}}),
+        h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'8px',marginBottom:'10px'}},
+          newQ.opts.map((opt,i)=>h('div',{key:i,style:{display:'flex',alignItems:'center',gap:'6px'}},
+            h('input',{type:'radio',checked:newQ.correct===i,onChange:()=>setNewQ({...newQ,correct:i}),title:'Mark as correct'}),
+            h('input',{className:'input',value:opt,onChange:e=>{const o=[...newQ.opts];o[i]=e.target.value;setNewQ({...newQ,opts:o})},placeholder:'Option '+'ABCD'[i]})
+          ))
+        ),
+        h('p',{style:{fontSize:'11px',color:'#64748b',marginBottom:'8px'}},'Radio button = correct answer'),
+        err&&h('p',{style:{color:'#f87171',fontSize:'13px',marginBottom:'8px'}},err),
+        h('button',{className:'btn btn-secondary btn-sm',onClick:addQ},'+ Add Question')
+      )
+    ),
+    h('div',{style:{display:'flex',gap:'8px',justifyContent:'flex-end'}},
+      h('button',{className:'btn btn-secondary btn-sm',onClick:onCancel},'Cancel'),
+      h('button',{className:'btn btn-primary btn-sm',onClick:save},'Save Exam')
+    )
+  );
+}
+
+function AdminResults({exams}){
+  const results=LS.get('oex_results')||[];
+  const users=LS.get('oex_users')||[];
+  if(results.length===0)return h('p',{style:{color:'#64748b'}},'No results yet.');
+
+  return h('div',null,
+    h('div',{style:{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'12px',marginBottom:'1.5rem'}},
+      [{label:'Total Attempts',val:results.length,color:'#3b82f6'},
+       {label:'Pass Rate',val:Math.round(results.filter(r=>r.pct>=60).length/results.length*100)+'%',color:'#22c55e'},
+       {label:'Avg Score',val:Math.round(results.reduce((a,r)=>a+r.pct,0)/results.length)+'%',color:'#f59e0b'}
+      ].map(s=>h('div',{key:s.label,style:{background:'#1e293b',border:'1px solid #334155',borderRadius:'12px',padding:'1rem'}},
+        h('div',{style:{fontSize:'22px',fontWeight:600,fontFamily:'Sora',color:s.color}},s.val),
+        h('div',{style:{fontSize:'13px',color:'#94a3b8',marginTop:'3px'}},s.label)
+      ))
+    ),
+    h('div',{style:{display:'grid',gap:'8px'}},
+      results.slice().sort((a,b)=>b.submittedAt-a.submittedAt).map(r=>{
+        const u=users.find(x=>x.id===r.userId);
+        const ex=exams.find(x=>x.id===r.examId);
+        const passed=r.pct>=60;
+        return h('div',{key:r.id,style:{background:'#1e293b',border:'1px solid #334155',borderRadius:'10px',padding:'12px 16px',display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:'8px'}},
+          h('div',null,
+            h('div',{style:{display:'flex',alignItems:'center',gap:'8px',marginBottom:'3px'}},
+              h('div',{style:{width:'30px',height:'30px',borderRadius:'50%',background:'#2d3f55',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'12px',fontWeight:600,color:'#94a3b8'}},u?(u.name[0].toUpperCase()):'?'),
+              h('span',{style:{fontWeight:500,fontSize:'14px'}},u?u.name:'Unknown'),
+              h('span',{className:'badge '+(passed?'badge-green':'badge-red')},passed?'Passed':'Failed')
+            ),
+            h('div',{style:{fontSize:'13px',color:'#94a3b8'}},ex?ex.title:'Unknown Exam',' · ',r.score+'/'+r.total,' correct · ',new Date(r.submittedAt).toLocaleDateString())
+          ),
+          h('div',{style:{fontSize:'22px',fontFamily:'Sora',fontWeight:700,color:passed?'#22c55e':'#ef4444'}},r.pct+'%')
+        );
+      })
+    )
+  );
+}
+
+// ─── App Root ─────────────────────────────────────────────────────────────────
+function App(){
+  const [user,setUser]=useState(()=>LS.get('oex_current_user'));
+  const [page,setPage]=useState(()=>{ const u=LS.get('oex_current_user'); return u?(u.role==='admin'?'admin':'student'):'login'; });
+  const [activeExam,setActiveExam]=useState(null);
+
+  function login(u){setUser(u);LS.set('oex_current_user',u);setPage(u.role==='admin'?'admin':'student');}
+  function logout(){setUser(null);LS.set('oex_current_user',null);setPage('login');}
+
+  const auth={user,login,logout};
+
+  return h(AuthCtx.Provider,{value:auth},
+    h('div',{style:{minHeight:'600px',background:'#0f172a'}},
+      user&&h(Navbar,{page,setPage}),
+      page==='login'?h(LoginPage,{setPage}):
+      page==='student'?h(StudentDashboard,{setPage,setActiveExam}):
+      page==='exam'&&activeExam?h(ExamRoom,{exam:activeExam,setPage}):
+      page==='admin'?h(AdminDashboard,{}):
+      h('div',{style:{padding:'2rem',color:'#94a3b8'}},'404 - Page not found')
+    )
+  );
+}
+
+ReactDOM.render(h(App),document.getElementById('app'));
+</script>
